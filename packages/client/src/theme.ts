@@ -11,11 +11,11 @@ export const theme = {
     global: {
       body: {
         margin: 0,
-        "font-family": `'Red Hat Display', sans-serif`,
+        // "font-family": `'Red Hat Display', sans-serif`,
       },
-      code: {
-        "font-family": `'Red Hat Display', sans-serif`,
-      },
+      // code: {
+      //   "font-family": `'Red Hat Display', sans-serif`,
+      // },
     },
   },
 };

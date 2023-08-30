@@ -1,53 +1,77 @@
-import { ModalOverlay,Modal,ModalContent,ModalHeader,ModalCloseButton,ModalBody,ModalFooter } from "@chakra-ui/modal";
-import  {Button} from "@chakra-ui/react"
-import { FC, ReactNode } from "react";
-import { Formik,Form } from "formik";
-import * as Yup from "yup";
+import {
+  Modal,
+  ModalBody,
+  ModalCloseButton,
+  ModalContent,
+  ModalFooter,
+  ModalHeader,
+} from "@chakra-ui/modal";
+import { Button, Heading, ModalOverlay } from "@chakra-ui/react";
+import { Form, Formik } from "formik";
+import { useCallback, useContext, useState } from "react";
+import socket from "../../socket";
 import TextField from "../TextField";
+import { FriendContext } from "./index";
+import * as Yup from 'yup'
 
-
-type AddModalProps = {
-  isOpen:boolean;
-  onClose:any;
-}
-const AddFriendModal:FC<AddModalProps> = ({isOpen,onClose}) => {
+const AddFriendModal = ({ isOpen, onClose }) => {
+  const [error, setError] = useState("");
+  const closeModal = useCallback(() => {
+    setError("");
+    onClose();
+  }, [onClose]);
+  const { setFriendList } = useContext(FriendContext);
   return (
-   <Modal isOpen={isOpen} onClose={onClose}>
-        <ModalOverlay />
-        <ModalContent>
-          <ModalHeader>Add Friend</ModalHeader>
-          <ModalCloseButton />
-          <Formik
-        initialValues={{ friendName: ""}}
-        onSubmit={(values,actions)=>{
-            console.log(values);
-            onClose()
-            actions.resetForm();
-        }}
-         validationSchema={Yup.object({
+    <Modal isOpen={isOpen} onClose={closeModal}>
+      <ModalOverlay />
+      <ModalContent>
+        <ModalHeader>Add a friend!</ModalHeader>
+        <ModalCloseButton />
+        <Formik
+          initialValues={{ friendName: "" }}
+          onSubmit={values => {
+            socket.emit(
+              "add_friend",
+              values.friendName,
+              ({ errorMsg, done, newFriend }) => {
+                if (done) {
+                  setFriendList(c => [newFriend, ...c]);
+                  closeModal();
+                  return;
+                }
+                setError(errorMsg);
+              }
+            );
+          }}
+           validationSchema={Yup.object({
           friendName: Yup.string()
             .required("Friend's Name required")
             .min(6, "Friend's Name too short")
             .max(28, "Friend's Name too long!"),
         })}
         >
-        <Form>
-          <ModalBody>
-           <TextField
-            label="Friend's name"
-            placeholder="Enter your friend name"
-            autoComplete='off'
-            name="friendName"
-           />
-          </ModalBody>
-          <ModalFooter>
-            <Button colorScheme="blue" type="submit">Submit</Button>
-          </ModalFooter>
+          <Form>
+            <ModalBody>
+              <Heading fontSize="xl" color="red.500" textAlign="center">
+                {error}
+              </Heading>
+              <TextField
+                label="Friend's name"
+                placeholder="Enter friend's username.."
+                autoComplete="off"
+                name="friendName"
+              />
+            </ModalBody>
+            <ModalFooter>
+              <Button colorScheme="blue" type="submit">
+                Submit
+              </Button>
+            </ModalFooter>
           </Form>
-          </Formik>
-        </ModalContent>
+        </Formik>
+      </ModalContent>
     </Modal>
-  )
-}
+  );
+};
 
-export default AddFriendModal
+export default AddFriendModal;
